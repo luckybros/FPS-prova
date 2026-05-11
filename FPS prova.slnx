@@ -11,7 +11,6 @@
   <Project Path="Unity.PerformanceTesting.Editor.csproj" />
   <Project Path="Unity.Searcher.Editor.csproj" />
   <Project Path="Unity.Burst.csproj" />
-  <Project Path="Unity.Tutorials.Core.Editor.csproj" />
   <Project Path="Unity.ProBuilder.Csg.csproj" />
   <Project Path="Unity.AI.Navigation.Editor.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
@@ -26,15 +25,12 @@
   <Project Path="Unity.Performance.Profile-Analyzer.Editor.csproj" />
   <Project Path="Unity.Play.Publisher.Editor.csproj" />
   <Project Path="Unity.Burst.Editor.csproj" />
-  <Project Path="Unity.Microgame.Tutorials.csproj" />
   <Project Path="Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.csproj" />
   <Project Path="Unity.AI.Navigation.Updater.csproj" />
   <Project Path="Unity.ProBuilder.Stl.csproj" />
   <Project Path="Unity.Settings.Editor.csproj" />
-  <Project Path="Unity.InternalAPIEngineBridge.007.csproj" />
   <Project Path="NavMeshComponents.csproj" />
   <Project Path="Unity.InputSystem.DocCodeSamples.csproj" />
-  <Project Path="Unity.InternalAPIEditorBridge.007.csproj" />
   <Project Path="fps.AI.csproj" />
   <Project Path="Unity.InternalAPIEditorBridgeDev.001.csproj" />
   <Project Path="Unity.ProBuilder.KdTree.csproj" />
@@ -43,9 +39,7 @@
   <Project Path="Unity.Collections.CodeGen.csproj" />
   <Project Path="Unity.Mathematics.Editor.csproj" />
   <Project Path="fps.Gameplay.csproj" />
-  <Project Path="Unity.Tutorials.Core.csproj" />
   <Project Path="Unity.ProBuilder.AssetIdRemapUtility.csproj" />
-  <Project Path="Unity.FPS.Tutorials.csproj" />
   <Project Path="Unity.InputSystem.TestFramework.csproj" />
   <Project Path="Unity.EditorCoroutines.Editor.csproj" />
   <Project Path="NavMeshComponentsEditor.csproj" />
