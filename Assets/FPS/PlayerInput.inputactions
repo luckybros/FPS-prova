@@ -9,7 +9,7 @@
                 {
                     "name": "Move",
                     "type": "Value",
-                    "id": "81d78da6-5ef5-4bd8-be80-ac38e24445a8",
+                    "id": "c9e3166c-4dfb-4471-9582-ebb324a4a8f0",
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
@@ -19,7 +19,7 @@
             "bindings": [
                 {
                     "name": "2D Vector",
-                    "id": "c50c832c-280a-4868-8dbc-d3dcfab63476",
+                    "id": "63524a18-5dd3-48f4-b756-609516fccd2d",
                     "path": "2DVector",
                     "interactions": "",
                     "processors": "",
@@ -30,7 +30,7 @@
                 },
                 {
                     "name": "up",
-                    "id": "2efadcc9-daf9-4d66-8ec0-ed43a3cd9fbc",
+                    "id": "2c8c55ab-70b8-41a9-8110-a4b3a4aaa098",
                     "path": "<Keyboard>/w",
                     "interactions": "",
                     "processors": "",
@@ -41,7 +41,7 @@
                 },
                 {
                     "name": "down",
-                    "id": "53fdbf2b-3b48-4ad7-9588-13c18e1424cb",
+                    "id": "14f9bb40-48ac-442e-b2f4-fd35fc390596",
                     "path": "<Keyboard>/s",
                     "interactions": "",
                     "processors": "",
@@ -52,7 +52,7 @@
                 },
                 {
                     "name": "left",
-                    "id": "04d1af1f-b3fa-4e8b-930c-f02e86848b29",
+                    "id": "bfcd6dc0-b4a6-4d22-8a65-739e88e1d53b",
                     "path": "<Keyboard>/a",
                     "interactions": "",
                     "processors": "",
@@ -63,7 +63,7 @@
                 },
                 {
                     "name": "right",
-                    "id": "a33b318f-add8-4a7f-88ac-b7804b6ec280",
+                    "id": "ce51b324-5a01-4f57-a774-a41163061564",
                     "path": "<Keyboard>/d",
                     "interactions": "",
                     "processors": "",

@@ -243,7 +243,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8534e17a0f90604c9afd4f5c73d829f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Tutorials.Core::Unity.Tutorials.Core.SceneObjectGuid
-  m_Id: 237d8ffc-64bb-4597-9d8c-1c01bc200915
 --- !u!4 &218425204 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2320371260222401683, guid: 1357d534d67e44349a4b7c67840165c7,
@@ -903,7 +902,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8534e17a0f90604c9afd4f5c73d829f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Tutorials.Core::Unity.Tutorials.Core.SceneObjectGuid
-  m_Id: 38e8f74a-3be0-4e2d-9f45-059832ae5dca
 --- !u!4 &1058203566 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2320371260222401683, guid: 1357d534d67e44349a4b7c67840165c7,
@@ -988,6 +986,16 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1534021825722191349, guid: 3dc4b2294e68247a3827898c750d16a3,
+        type: 3}
+      propertyPath: m_BehaviorName
+      value: SimpleAgent
+      objectReference: {fileID: 0}
+    - target: {fileID: 1534021825722191349, guid: 3dc4b2294e68247a3827898c750d16a3,
+        type: 3}
+      propertyPath: m_BrainParameters.VectorObservationSize
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 2286125971047457827, guid: 3dc4b2294e68247a3827898c750d16a3,
         type: 3}
       propertyPath: m_ClearFlags
@@ -1001,12 +1009,12 @@ PrefabInstance:
     - target: {fileID: 8746678193447392789, guid: 3dc4b2294e68247a3827898c750d16a3,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -25.4681
+      value: -24.4
       objectReference: {fileID: 0}
     - target: {fileID: 8746678193447392789, guid: 3dc4b2294e68247a3827898c750d16a3,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.75788
+      value: 2.95
       objectReference: {fileID: 0}
     - target: {fileID: 8746678193447392789, guid: 3dc4b2294e68247a3827898c750d16a3,
         type: 3}
@@ -1315,7 +1323,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8534e17a0f90604c9afd4f5c73d829f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Id: 6f50059d-c3ce-4a13-92b1-35e816ee2b45
 --- !u!4 &1505209766 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2141676431450117668, guid: cd17687759887a0438ee021e51abc9d9,
@@ -2560,7 +2567,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8534e17a0f90604c9afd4f5c73d829f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Id: 0f096871-5e52-4e48-88a1-3dc5adb8e7ea
 --- !u!1 &2729281213600907713
 GameObject:
   m_ObjectHideFlags: 0
