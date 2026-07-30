@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Unity.FPS.Game;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
-
 namespace Unity.FPS.AI
 {
     [RequireComponent(typeof(Health), typeof(Actor), typeof(NavMeshAgent))]
@@ -111,6 +110,7 @@ namespace Unity.FPS.AI
         Actor m_Actor;
         Collider[] m_SelfColliders;
         GameFlowManager m_GameFlowManager;
+        EnvironmentResetManager m_ResetManager;
         bool m_WasDamagedThisFrame;
         float m_LastTimeWeaponSwapped = Mathf.NegativeInfinity;
         int m_CurrentWeaponIndex;
@@ -120,10 +120,10 @@ namespace Unity.FPS.AI
 
         void Start()
         {
-            m_EnemyManager = FindAnyObjectByType<EnemyManager>();
+            m_EnemyManager = transform.root.GetComponentInChildren<EnemyManager>();
             DebugUtility.HandleErrorIfNullFindObject<EnemyManager, EnemyController>(m_EnemyManager, this);
 
-            m_ActorsManager = FindAnyObjectByType<ActorsManager>();
+            m_ActorsManager = transform.root.GetComponentInChildren<ActorsManager>();
             DebugUtility.HandleErrorIfNullFindObject<ActorsManager, EnemyController>(m_ActorsManager, this);
 
             m_EnemyManager.RegisterEnemy(this);
@@ -139,6 +139,8 @@ namespace Unity.FPS.AI
 
             m_GameFlowManager = FindAnyObjectByType<GameFlowManager>();
             DebugUtility.HandleErrorIfNullFindObject<GameFlowManager, EnemyController>(m_GameFlowManager, this);
+
+            m_ResetManager = transform.root.GetComponentInChildren<EnvironmentResetManager>();
 
             // Subscribe to damage & death actions
             m_Health.OnDie += OnDie;
@@ -366,6 +368,13 @@ namespace Unity.FPS.AI
             // tells the game flow manager to handle the enemy destuction
             m_EnemyManager.UnregisterEnemy(this);
 
+            // In RL mode, disable instead of destroy so the enemy can be respawned in-place
+            if (m_ResetManager != null)
+            {
+                gameObject.SetActive(false);
+                return;
+            }
+
             // loot an object
             if (TryDropItem())
             {
@@ -485,6 +494,28 @@ namespace Unity.FPS.AI
             {
                 m_LastTimeWeaponSwapped = Mathf.NegativeInfinity;
             }
+        }
+
+        /// <summary>Restores the enemy to its spawn state for RL episode reset.</summary>
+        public void ResetEnemy(Vector3 spawnPosition, Quaternion spawnRotation)
+        {
+            gameObject.SetActive(true);
+
+            // Warp NavMeshAgent to avoid path-finding artifacts after teleport
+            NavMeshAgent.enabled = false;
+            transform.SetPositionAndRotation(spawnPosition, spawnRotation);
+            NavMeshAgent.enabled = true;
+            NavMeshAgent.Warp(spawnPosition);
+
+            m_Health.ResetHealth();
+            ResetPathDestination();
+            DetectionModule.ResetDetection();
+
+            // Reset AI state machine to avoid NullReferenceException on KnownDetectedTarget
+            GetComponent<EnemyMobile>()?.ResetAiState();
+
+            // Re-register with the enemy manager
+            m_EnemyManager.RegisterEnemy(this);
         }
     }
 }

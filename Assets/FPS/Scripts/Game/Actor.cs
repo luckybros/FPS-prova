@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Unity.FPS.Game
 {
@@ -16,7 +16,7 @@ namespace Unity.FPS.Game
 
         void Start()
         {
-            m_ActorsManager = GameObject.FindFirstObjectByType<ActorsManager>();
+            m_ActorsManager = transform.root.GetComponentInChildren<ActorsManager>();
             DebugUtility.HandleErrorIfNullFindObject<ActorsManager, Actor>(m_ActorsManager, this);
 
             // Register as an actor

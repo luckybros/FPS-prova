@@ -28,6 +28,15 @@ namespace Unity.FPS.Gameplay
         private InputAction m_MoveAction;
         private PlayerInput m_PlayerInput;
 
+        [HideInInspector] public int m_MoveForward;
+        [HideInInspector] public int m_MoveSideways;
+        public bool IsMoving() => Mathf.Abs(m_MoveForward) > 0.1f || Mathf.Abs(m_MoveSideways) > 0.1;
+        [HideInInspector] public int m_Turn;
+        public bool IsTurning() => Mathf.Abs(m_Turn) > 0.1f;
+        [HideInInspector] public bool m_Shoot;
+        public float horizontalTurnSpeed;
+        private float stuckBugMultiplier = 1f;
+
         void Start()
         {
             m_PlayerCharacterController = GetComponent<PlayerCharacterController>();
@@ -39,12 +48,13 @@ namespace Unity.FPS.Gameplay
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
-            m_PlayerInput = GetComponent<PlayerInput>();
-            m_PlayerInput.currentActionMap.Enable();
+            m_MoveForward = 0;
+            m_MoveSideways = 0;
+        }
 
-            m_MoveAction = m_PlayerInput.actions.FindAction("Player/Move");
-            
-            m_MoveAction.Enable();
+        void LateUpdate()
+        {
+            m_FireInputWasHeld = GetFireInputHeld();
         }
 
         public bool CanProcessInput()
@@ -56,8 +66,13 @@ namespace Unity.FPS.Gameplay
         {
             if (CanProcessInput())
             {
-                var input = m_MoveAction.ReadValue<Vector2>();
-                Vector3 move = new Vector3(input.x, 0f, input.y);
+                // var input = m_MoveAction.ReadValue<Vector2>();
+                Vector3 move = new Vector3(m_MoveSideways, 0f, m_MoveForward);
+
+                if (FaultManager.Instance != null && FaultManager.Instance.Config.stuckBugs)
+                {
+                    move *= stuckBugMultiplier;
+                }
 
                 // constrain move input to a maximum magnitude of 1, otherwise diagonal movement might exceed the max move speed defined
                 move = Vector3.ClampMagnitude(move, 1);
@@ -68,15 +83,41 @@ namespace Unity.FPS.Gameplay
             return Vector3.zero;
         }
 
-        public float GetLookInputsHorizontal() => 0.0f;
+        public float GetLookInputsHorizontal()
+        {
+            if (!CanProcessInput())
+                return 0.0f;
+
+            float input = m_Turn / horizontalTurnSpeed;
+
+            return input;
+        }
+
+        public bool GetFireInputDown()
+        {
+            return GetFireInputHeld() && !m_FireInputWasHeld;
+        }
+
+        public bool GetFireInputReleased()
+        {
+            return !GetFireInputHeld() && m_FireInputWasHeld;
+        }
+
+        public bool GetFireInputHeld()
+        {
+            if (CanProcessInput())
+            {
+                return m_Shoot;
+            }
+
+            return false;
+        }
+
         public float GetLookInputsVertical()   => 0.0f;
 
         public bool GetJumpInputDown() => false;
         public bool GetJumpInputHeld() => false;
 
-        public bool GetFireInputDown()     => false;
-        public bool GetFireInputReleased() => false;
-        public bool GetFireInputHeld()     => false;
         public bool GetAimInputHeld()      => false; 
 
         public bool GetSprintInputHeld()   => false;
@@ -85,5 +126,10 @@ namespace Unity.FPS.Gameplay
         public bool GetReloadButtonDown()  => false;
         public int GetSwitchWeaponInput()  => 0;
         public int GetSelectWeaponInput()  => 0;
+
+        public void SetSpeedBugMultiplier(float value)
+        {
+            stuckBugMultiplier = value;
+        }
     }
 }

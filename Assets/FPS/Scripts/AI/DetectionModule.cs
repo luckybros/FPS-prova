@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Unity.FPS.Game;
 using UnityEngine;
 using UnityEngine.Events;
@@ -39,7 +39,7 @@ namespace Unity.FPS.AI
 
         protected virtual void Start()
         {
-            m_ActorsManager = FindAnyObjectByType<ActorsManager>();
+            m_ActorsManager = transform.root.GetComponentInChildren<ActorsManager>();
             DebugUtility.HandleErrorIfNullFindObject<ActorsManager, DetectionModule>(m_ActorsManager, this);
         }
 
@@ -136,6 +136,16 @@ namespace Unity.FPS.AI
             {
                 Animator.SetTrigger(k_AnimAttackParameter);
             }
+        }
+
+        /// <summary>Clears all detection state for RL episode reset.</summary>
+        public virtual void ResetDetection()
+        {
+            KnownDetectedTarget = null;
+            IsSeeingTarget = false;
+            IsTargetInAttackRange = false;
+            HadKnownTarget = false;
+            TimeLastSeenTarget = Mathf.NegativeInfinity;
         }
     }
 }

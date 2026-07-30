@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Unity.FPS.Game;
 using UnityEngine;
 
@@ -16,20 +16,26 @@ namespace Unity.FPS.UI
         public GameObject SecondaryObjectivePrefab;
 
         Dictionary<Objective, ObjectiveToast> m_ObjectivesDictionnary;
+        ObjectiveManager m_ObjectiveManager;
+        EventManager m_EventManager;
 
         void Awake()
         {
             m_ObjectivesDictionnary = new Dictionary<Objective, ObjectiveToast>();
 
-            EventManager.AddListener<ObjectiveUpdateEvent>(OnUpdateObjective);
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, ObjectiveHUDManager>(m_EventManager, this);
+            m_EventManager.AddListener<ObjectiveUpdateEvent>(OnUpdateObjective);
 
-            Objective.OnObjectiveCreated += RegisterObjective;
-            Objective.OnObjectiveCompleted += UnregisterObjective;
+            // Subscribe to instance events on the local ObjectiveManager instead of global static events.
+            m_ObjectiveManager = transform.root.GetComponentInChildren<ObjectiveManager>();
+            DebugUtility.HandleErrorIfNullFindObject<ObjectiveManager, ObjectiveHUDManager>(m_ObjectiveManager, this);
+            m_ObjectiveManager.OnObjectiveCreated += RegisterObjective;
+            m_ObjectiveManager.OnObjectiveCompleted += UnregisterObjective;
         }
 
         public void RegisterObjective(Objective objective)
         {
-            // instanciate the Ui element for the new objective
             GameObject objectiveUIInstance =
                 Instantiate(objective.IsOptional ? SecondaryObjectivePrefab : PrimaryObjectivePrefab, ObjectivePanel);
 
@@ -40,7 +46,6 @@ namespace Unity.FPS.UI
             DebugUtility.HandleErrorIfNullGetComponent<ObjectiveToast, ObjectiveHUDManager>(toast, this,
                 objectiveUIInstance.gameObject);
 
-            // initialize the element and give it the objective description
             toast.Initialize(objective.Title, objective.Description, "", objective.IsOptional, objective.DelayVisible);
 
             m_ObjectivesDictionnary.Add(objective, toast);
@@ -50,11 +55,8 @@ namespace Unity.FPS.UI
 
         public void UnregisterObjective(Objective objective)
         {
-            // if the objective if in the list, make it fade out, and remove it from the list
             if (m_ObjectivesDictionnary.TryGetValue(objective, out ObjectiveToast toast) && toast != null)
-            {
                 toast.Complete();
-            }
 
             m_ObjectivesDictionnary.Remove(objective);
         }
@@ -63,7 +65,6 @@ namespace Unity.FPS.UI
         {
             if (m_ObjectivesDictionnary.TryGetValue(evt.Objective, out ObjectiveToast toast) && toast != null)
             {
-                // set the new updated description for the objective, and forces the content size fitter to be recalculated
                 Canvas.ForceUpdateCanvases();
                 if (!string.IsNullOrEmpty(evt.DescriptionText))
                     toast.DescriptionTextContent.text = evt.DescriptionText;
@@ -72,18 +73,20 @@ namespace Unity.FPS.UI
                     toast.CounterTextContent.text = evt.CounterText;
 
                 if (toast.GetComponent<RectTransform>())
-                {
                     UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(toast.GetComponent<RectTransform>());
-                }
             }
         }
 
         void OnDestroy()
         {
-            EventManager.AddListener<ObjectiveUpdateEvent>(OnUpdateObjective);
+            if (m_EventManager != null)
+                m_EventManager.RemoveListener<ObjectiveUpdateEvent>(OnUpdateObjective);
 
-            Objective.OnObjectiveCreated -= RegisterObjective;
-            Objective.OnObjectiveCompleted -= UnregisterObjective;
+            if (m_ObjectiveManager != null)
+            {
+                m_ObjectiveManager.OnObjectiveCreated -= RegisterObjective;
+                m_ObjectiveManager.OnObjectiveCompleted -= UnregisterObjective;
+            }
         }
     }
 }

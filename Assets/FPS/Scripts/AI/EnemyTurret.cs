@@ -79,6 +79,9 @@ namespace Unity.FPS.AI
             switch (AiState)
             {
                 case AIState.Attack:
+                    if (m_EnemyController.KnownDetectedTarget == null)
+                        break;
+                        
                     bool mustShoot = Time.time > m_TimeStartedDetection + DetectionFireDelay;
                     // Calculate the desired rotation of our turret (aim at target)
                     Vector3 directionToTarget =
@@ -147,7 +150,7 @@ namespace Unity.FPS.AI
                 AudioUtility.CreateSFX(OnDetectSfx, transform.position, AudioUtility.AudioGroups.EnemyDetection, 1f);
             }
 
-            Animator.SetBool(k_AnimIsActiveParameter, true);
+            //Animator.SetBool(k_AnimIsActiveParameter, true);
             m_TimeStartedDetection = Time.time;
         }
 

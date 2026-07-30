@@ -1,4 +1,4 @@
-﻿using Unity.FPS.Game;
+using Unity.FPS.Game;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -45,7 +45,7 @@ namespace Unity.FPS.Gameplay
         public float KillHeight = -50f;
 
         [Header("Rotation")] [Tooltip("Rotation speed for moving the camera")]
-        public float RotationSpeed = 200f;
+        public float RotationSpeed = 12000f;
 
         [Range(0.1f, 1f)] [Tooltip("Rotation speed multiplier when aiming")]
         public float AimingRotationMultiplier = 0.4f;
@@ -117,7 +117,7 @@ namespace Unity.FPS.Gameplay
             }
         }
 
-        Health m_Health;
+        public Health m_Health;
         PlayerInputHandler m_InputHandler;
         CharacterController m_Controller;
         PlayerWeaponsManager m_WeaponsManager;
@@ -129,13 +129,14 @@ namespace Unity.FPS.Gameplay
         float m_CameraVerticalAngle = 0f;
         float m_FootstepDistanceCounter;
         float m_TargetCharacterHeight;
+        EventManager m_EventManager;
 
         const float k_JumpGroundingPreventionTime = 0.2f;
         const float k_GroundCheckDistanceInAir = 0.07f;
 
         void Awake()
         {
-            ActorsManager actorsManager = FindFirstObjectByType<ActorsManager>();
+            ActorsManager actorsManager = transform.root.GetComponentInChildren<ActorsManager>();
             if (actorsManager != null)
                 actorsManager.SetPlayer(gameObject);
         }
@@ -158,6 +159,9 @@ namespace Unity.FPS.Gameplay
             m_Health = GetComponent<Health>();
             DebugUtility.HandleErrorIfNullGetComponent<Health, PlayerCharacterController>(m_Health, this, gameObject);
 
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, PlayerCharacterController>(m_EventManager, this);
+
             m_Actor = GetComponent<Actor>();
             DebugUtility.HandleErrorIfNullGetComponent<Actor, PlayerCharacterController>(m_Actor, this, gameObject);
 
@@ -175,7 +179,21 @@ namespace Unity.FPS.Gameplay
             // check for Y kill
             if (!IsDead && transform.position.y < KillHeight)
             {
-                m_Health.Kill();
+                if (FaultManager.Instance != null && FaultManager.Instance.Config.hangBugDieInVoid)
+                {
+                    OracleManager.Instance.ReportGameLogicBug(
+                        "HANG ORACLE",
+                        "hang_die_in_void",
+                        "Not recieved ping for timeout seconds"
+                    );
+                    // while (true) {}
+                    return;
+                }
+
+                else
+                {
+                    m_Health.Kill();
+                }
             }
 
             HasJumpedThisFrame = false;
@@ -223,7 +241,7 @@ namespace Unity.FPS.Gameplay
             // Tell the weapons manager to switch to a non-existing weapon in order to lower the weapon
             m_WeaponsManager.SwitchToWeaponIndex(-1, true);
 
-            EventManager.Broadcast(Events.PlayerDeathEvent);
+            m_EventManager.Broadcast(Events.PlayerDeathEvent);
         }
 
         void GroundCheck()
@@ -270,8 +288,10 @@ namespace Unity.FPS.Gameplay
             {
                 // rotate the transform with the input speed around its local Y axis
                 transform.Rotate(
-                    new Vector3(0f, (m_InputHandler.GetLookInputsHorizontal() * RotationSpeed * RotationMultiplier),
-                        0f), Space.Self);
+                new Vector3(0f, (m_InputHandler.GetLookInputsHorizontal() * RotationSpeed * RotationMultiplier * Time.deltaTime),
+                    0f), Space.Self);
+
+                m_CameraVerticalAngle += m_InputHandler.GetLookInputsVertical() * RotationSpeed * RotationMultiplier * Time.deltaTime;
             }
 
             // vertical camera rotation
@@ -472,6 +492,28 @@ namespace Unity.FPS.Gameplay
 
             IsCrouching = crouched;
             return true;
+        }
+
+        /// <summary>Restores the player to its spawn transform and resets health. Used for RL episode reset.</summary>
+        public void ResetPlayer(Vector3 spawnPosition, Quaternion spawnRotation)
+        {
+            IsDead = false;
+            CharacterVelocity = Vector3.zero;
+            m_LastTimeJumped = 0f;
+            m_CameraVerticalAngle = 0f;
+            m_FootstepDistanceCounter = 0f;
+
+            // CharacterController must be disabled before directly moving the transform
+            m_Controller.enabled = false;
+            transform.SetPositionAndRotation(spawnPosition, spawnRotation);
+            m_Controller.enabled = true;
+
+            PlayerCamera.transform.localEulerAngles = Vector3.zero;
+            SetCrouchingState(false, true);
+            UpdateCharacterHeight(true);
+
+            m_Health.ResetHealth();
+            m_WeaponsManager.ResetWeaponState();
         }
     }
 }

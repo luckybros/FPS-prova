@@ -1,4 +1,3 @@
-﻿using System;
 using UnityEngine;
 
 namespace Unity.FPS.Game
@@ -17,20 +16,27 @@ namespace Unity.FPS.Game
         [Tooltip("Delay before the objective becomes visible")]
         public float DelayVisible;
 
-        public bool IsCompleted { get; private set; }
+        public bool IsCompleted { get; protected set; }
         public bool IsBlocking() => !(IsOptional || IsCompleted);
 
-        public static event Action<Objective> OnObjectiveCreated;
-        public static event Action<Objective> OnObjectiveCompleted;
+        protected EventManager m_EventManager;
+        protected ObjectiveManager m_ObjectiveManager;
 
         protected virtual void Start()
         {
-            OnObjectiveCreated?.Invoke(this);
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, Objective>(m_EventManager, this);
+
+            m_ObjectiveManager = transform.root.GetComponentInChildren<ObjectiveManager>();
+            DebugUtility.HandleErrorIfNullFindObject<ObjectiveManager, Objective>(m_ObjectiveManager, this);
+
+            // Register with the local ObjectiveManager instead of a global static event.
+            m_ObjectiveManager.RegisterObjective(this);
 
             DisplayMessageEvent displayMessage = Events.DisplayMessageEvent;
             displayMessage.Message = Title;
             displayMessage.DelayBeforeDisplay = 0.0f;
-            EventManager.Broadcast(displayMessage);
+            m_EventManager.Broadcast(displayMessage);
         }
 
         public void UpdateObjective(string descriptionText, string counterText, string notificationText)
@@ -41,7 +47,7 @@ namespace Unity.FPS.Game
             evt.CounterText = counterText;
             evt.NotificationText = notificationText;
             evt.IsComplete = IsCompleted;
-            EventManager.Broadcast(evt);
+            m_EventManager.Broadcast(evt);
         }
 
         public void CompleteObjective(string descriptionText, string counterText, string notificationText)
@@ -54,9 +60,19 @@ namespace Unity.FPS.Game
             evt.CounterText = counterText;
             evt.NotificationText = notificationText;
             evt.IsComplete = IsCompleted;
-            EventManager.Broadcast(evt);
+            m_EventManager.Broadcast(evt);
 
-            OnObjectiveCompleted?.Invoke(this);
+            // Notify the local ObjectiveManager instead of a global static event.
+            m_ObjectiveManager?.NotifyObjectiveCompleted(this);
+        }
+
+        /// <summary>
+        /// Resets this objective to its initial uncompleted state.
+        /// Override in subclasses to reset additional counters or state.
+        /// </summary>
+        public virtual void ResetObjective()
+        {
+            IsCompleted = false;
         }
     }
 }

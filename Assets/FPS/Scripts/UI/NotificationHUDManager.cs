@@ -1,4 +1,4 @@
-﻿using Unity.FPS.Game;
+using Unity.FPS.Game;
 using Unity.FPS.Gameplay;
 using UnityEngine;
 
@@ -12,18 +12,22 @@ namespace Unity.FPS.UI
         [Tooltip("Prefab for the notifications")]
         public GameObject NotificationPrefab;
 
+        EventManager m_EventManager;
+
         void Awake()
         {
-            PlayerWeaponsManager playerWeaponsManager = FindFirstObjectByType<PlayerWeaponsManager>();
+            PlayerWeaponsManager playerWeaponsManager = transform.root.GetComponentInChildren<PlayerWeaponsManager>();
             DebugUtility.HandleErrorIfNullFindObject<PlayerWeaponsManager, NotificationHUDManager>(playerWeaponsManager,
                 this);
             playerWeaponsManager.OnAddedWeapon += OnPickupWeapon;
 
-            Jetpack jetpack = FindFirstObjectByType<Jetpack>();
+            Jetpack jetpack = transform.root.GetComponentInChildren<Jetpack>();
             DebugUtility.HandleErrorIfNullFindObject<Jetpack, NotificationHUDManager>(jetpack, this);
             jetpack.OnUnlockJetpack += OnUnlockJetpack;
 
-            EventManager.AddListener<ObjectiveUpdateEvent>(OnObjectiveUpdateEvent);
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, NotificationHUDManager>(m_EventManager, this);
+            m_EventManager.AddListener<ObjectiveUpdateEvent>(OnObjectiveUpdateEvent);
         }
 
         void OnObjectiveUpdateEvent(ObjectiveUpdateEvent evt)
@@ -50,14 +54,13 @@ namespace Unity.FPS.UI
 
             NotificationToast toast = notificationInstance.GetComponent<NotificationToast>();
             if (toast)
-            {
                 toast.Initialize(text);
-            }
         }
 
         void OnDestroy()
         {
-            EventManager.RemoveListener<ObjectiveUpdateEvent>(OnObjectiveUpdateEvent);
+            if (m_EventManager != null)
+                m_EventManager.RemoveListener<ObjectiveUpdateEvent>(OnObjectiveUpdateEvent);
         }
     }
 }

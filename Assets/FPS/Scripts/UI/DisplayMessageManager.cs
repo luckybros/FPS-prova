@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Unity.FPS.Game;
 using UnityEngine;
 
@@ -10,10 +10,13 @@ namespace Unity.FPS.UI
         public NotificationToast MessagePrefab;
 
         List<(float timestamp, float delay, string message, NotificationToast notification)> m_PendingMessages;
+        EventManager m_EventManager;
 
         void Awake()
         {
-            EventManager.AddListener<DisplayMessageEvent>(OnDisplayMessageEvent);
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, DisplayMessageManager>(m_EventManager, this);
+            m_EventManager.AddListener<DisplayMessageEvent>(OnDisplayMessageEvent);
             m_PendingMessages = new List<(float, float, string, NotificationToast)>();
         }
 
@@ -46,7 +49,8 @@ namespace Unity.FPS.UI
 
         void OnDestroy()
         {
-            EventManager.RemoveListener<DisplayMessageEvent>(OnDisplayMessageEvent);
+            if (m_EventManager != null)
+                m_EventManager.RemoveListener<DisplayMessageEvent>(OnDisplayMessageEvent);
         }
     }
 }

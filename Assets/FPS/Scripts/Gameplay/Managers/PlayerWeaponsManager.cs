@@ -556,5 +556,19 @@ namespace Unity.FPS.Gameplay
                 newWeapon.ShowWeapon(true);
             }
         }
+
+        /// <summary>Forces the weapon manager into a clean state and brings up the first available weapon. Used for RL episode reset.</summary>
+        public void ResetWeaponState()
+        {
+            WeaponController currentWeapon = GetActiveWeapon();
+            if (currentWeapon != null)
+                currentWeapon.ShowWeapon(false);
+
+            ActiveWeaponIndex = -1;
+            m_WeaponSwitchState = WeaponSwitchState.Down;
+
+            SwitchWeapon(true);
+        }
+
     }
 }

@@ -1,61 +1,66 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Unity.FPS.Game
 {
-    public class GameEvent
+    public class GameEvent { }
+
+    /// <summary>
+    /// Per-environment event bus. Place this component on the root GameObject of each environment
+    /// so that all child components can locate it via transform.root.GetComponentInChildren.
+    /// Replaces the previous static implementation to isolate events between parallel RL environments.
+    /// </summary>
+    public class EventManager : MonoBehaviour
     {
-    }
+        readonly Dictionary<Type, Action<GameEvent>> m_Events = new Dictionary<Type, Action<GameEvent>>();
+        readonly Dictionary<Delegate, Action<GameEvent>> m_EventLookups = new Dictionary<Delegate, Action<GameEvent>>();
 
-    // A simple Event System that can be used for remote systems communication
-    public static class EventManager
-    {
-        static readonly Dictionary<Type, Action<GameEvent>> s_Events = new Dictionary<Type, Action<GameEvent>>();
-
-        static readonly Dictionary<Delegate, Action<GameEvent>> s_EventLookups =
-            new Dictionary<Delegate, Action<GameEvent>>();
-
-        public static void AddListener<T>(Action<T> evt) where T : GameEvent
+        /// <summary>Registers a typed listener on this environment's event bus.</summary>
+        public void AddListener<T>(Action<T> evt) where T : GameEvent
         {
-            if (!s_EventLookups.ContainsKey(evt))
+            if (!m_EventLookups.ContainsKey(evt))
             {
-                Action<GameEvent> newAction = (e) => evt((T) e);
-                s_EventLookups[evt] = newAction;
+                Action<GameEvent> newAction = (e) => evt((T)e);
+                m_EventLookups[evt] = newAction;
 
-                if (s_Events.TryGetValue(typeof(T), out Action<GameEvent> internalAction))
-                    s_Events[typeof(T)] = internalAction += newAction;
+                if (m_Events.TryGetValue(typeof(T), out Action<GameEvent> internalAction))
+                    m_Events[typeof(T)] = internalAction += newAction;
                 else
-                    s_Events[typeof(T)] = newAction;
+                    m_Events[typeof(T)] = newAction;
             }
         }
 
-        public static void RemoveListener<T>(Action<T> evt) where T : GameEvent
+        /// <summary>Removes a previously registered listener.</summary>
+        public void RemoveListener<T>(Action<T> evt) where T : GameEvent
         {
-            if (s_EventLookups.TryGetValue(evt, out var action))
+            if (m_EventLookups.TryGetValue(evt, out var action))
             {
-                if (s_Events.TryGetValue(typeof(T), out var tempAction))
+                if (m_Events.TryGetValue(typeof(T), out var tempAction))
                 {
                     tempAction -= action;
                     if (tempAction == null)
-                        s_Events.Remove(typeof(T));
+                        m_Events.Remove(typeof(T));
                     else
-                        s_Events[typeof(T)] = tempAction;
+                        m_Events[typeof(T)] = tempAction;
                 }
 
-                s_EventLookups.Remove(evt);
+                m_EventLookups.Remove(evt);
             }
         }
 
-        public static void Broadcast(GameEvent evt)
+        /// <summary>Broadcasts an event only to listeners registered on this environment's bus.</summary>
+        public void Broadcast(GameEvent evt)
         {
-            if (s_Events.TryGetValue(evt.GetType(), out var action))
+            if (m_Events.TryGetValue(evt.GetType(), out var action))
                 action.Invoke(evt);
         }
 
-        public static void Clear()
+        /// <summary>Removes all listeners. Call between episodes if needed.</summary>
+        public void Clear()
         {
-            s_Events.Clear();
-            s_EventLookups.Clear();
+            m_Events.Clear();
+            m_EventLookups.Clear();
         }
     }
 }

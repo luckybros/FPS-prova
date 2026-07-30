@@ -1,4 +1,4 @@
-﻿using Unity.FPS.Game;
+using Unity.FPS.Game;
 using UnityEngine;
 
 namespace Unity.FPS.Gameplay
@@ -15,7 +15,7 @@ namespace Unity.FPS.Gameplay
             {
                 playerHealth.Heal(HealAmount);
                 PlayPickupFeedback();
-                Destroy(gameObject);
+                HandlePickedUp();
             }
         }
     }

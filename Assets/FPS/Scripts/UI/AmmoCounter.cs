@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using Unity.FPS.Game;
 using Unity.FPS.Gameplay;
 using UnityEngine;
@@ -47,10 +47,13 @@ namespace Unity.FPS.UI
 
         PlayerWeaponsManager m_PlayerWeaponsManager;
         WeaponController m_Weapon;
+        EventManager m_EventManager;
 
         void Awake()
         {
-            EventManager.AddListener<AmmoPickupEvent>(OnAmmoPickup);
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, AmmoCounter>(m_EventManager, this);
+            m_EventManager.AddListener<AmmoPickupEvent>(OnAmmoPickup);
         }
 
         void OnAmmoPickup(AmmoPickupEvent evt)
@@ -72,7 +75,7 @@ namespace Unity.FPS.UI
                 BulletCounter.text = weapon.GetCarriedPhysicalBullets().ToString();
 
             Reload.gameObject.SetActive(false);
-            m_PlayerWeaponsManager = FindFirstObjectByType<PlayerWeaponsManager>();
+            m_PlayerWeaponsManager = transform.root.GetComponentInChildren<PlayerWeaponsManager>();
             DebugUtility.HandleErrorIfNullFindObject<PlayerWeaponsManager, AmmoCounter>(m_PlayerWeaponsManager, this);
 
             WeaponIndexText.text = (WeaponCounterIndex + 1).ToString();
@@ -103,7 +106,8 @@ namespace Unity.FPS.UI
 
         void Destroy()
         {
-            EventManager.RemoveListener<AmmoPickupEvent>(OnAmmoPickup);
+            if (m_EventManager != null)
+                m_EventManager.RemoveListener<AmmoPickupEvent>(OnAmmoPickup);
         }
     }
 }

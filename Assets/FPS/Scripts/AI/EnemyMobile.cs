@@ -1,4 +1,4 @@
-﻿using Unity.FPS.Game;
+using Unity.FPS.Game;
 using UnityEngine;
 
 namespace Unity.FPS.AI
@@ -180,6 +180,17 @@ namespace Unity.FPS.AI
             }
 
             Animator.SetTrigger(k_AnimOnDamagedParameter);
+        }
+
+        /// <summary>Resets the AI state machine to Patrol. Used for RL episode reset.</summary>
+        public void ResetAiState()
+        {
+            AiState = AIState.Patrol;
+
+            for (int i = 0; i < OnDetectVfx.Length; i++)
+                OnDetectVfx[i].Stop();
+
+            Animator.SetBool(k_AnimAlertedParameter, false);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Unity.FPS.Game;
+using Unity.FPS.Game;
 using UnityEngine;
 
 namespace Unity.FPS.Gameplay
@@ -20,9 +20,9 @@ namespace Unity.FPS.Gameplay
         {
             base.Start();
 
-            EventManager.AddListener<EnemyKillEvent>(OnEnemyKilled);
+            // Subscribe to the local environment's EnemyKillEvent only.
+            m_EventManager.AddListener<EnemyKillEvent>(OnEnemyKilled);
 
-            // set a title and description specific for this type of objective, if it hasn't one
             if (string.IsNullOrEmpty(Title))
                 Title = "Eliminate " + (MustKillAllEnemies ? "all the" : KillsToCompleteObjective.ToString()) +
                         " enemies";
@@ -43,7 +43,6 @@ namespace Unity.FPS.Gameplay
 
             int targetRemaining = MustKillAllEnemies ? evt.RemainingEnemyCount : KillsToCompleteObjective - m_KillTotal;
 
-            // update the objective text according to how many enemies remain to kill
             if (targetRemaining == 0)
             {
                 CompleteObjective(string.Empty, GetUpdatedCounterAmount(), "Objective complete : " + Title);
@@ -57,11 +56,9 @@ namespace Unity.FPS.Gameplay
             }
             else
             {
-                // create a notification text if needed, if it stays empty, the notification will not be created
                 string notificationText = NotificationEnemiesRemainingThreshold >= targetRemaining
                     ? targetRemaining + " enemies to kill left"
                     : string.Empty;
-
                 UpdateObjective(string.Empty, GetUpdatedCounterAmount(), notificationText);
             }
         }
@@ -73,7 +70,17 @@ namespace Unity.FPS.Gameplay
 
         void OnDestroy()
         {
-            EventManager.RemoveListener<EnemyKillEvent>(OnEnemyKilled);
+            if (m_EventManager != null)
+                m_EventManager.RemoveListener<EnemyKillEvent>(OnEnemyKilled);
+        }
+
+        /// <summary>
+        /// Resets kill count and completion state so the objective can be replayed.
+        /// </summary>
+        public override void ResetObjective()
+        {
+            base.ResetObjective();
+            m_KillTotal = 0;
         }
     }
 }

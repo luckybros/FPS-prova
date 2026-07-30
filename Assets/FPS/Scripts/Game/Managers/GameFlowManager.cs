@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Unity.FPS.Game
@@ -19,6 +19,7 @@ namespace Unity.FPS.Game
 
         [Tooltip("Win game message")]
         public string WinGameMessage;
+
         [Tooltip("Duration of delay before the win message")]
         public float DelayBeforeWinMessage = 2f;
 
@@ -27,21 +28,29 @@ namespace Unity.FPS.Game
         [Header("Lose")] [Tooltip("This string has to be the name of the scene you want to load when losing")]
         public string LoseSceneName = "LoseScene";
 
-
         public bool GameIsEnding { get; private set; }
 
         float m_TimeLoadEndGameScene;
         string m_SceneToLoad;
+        EventManager m_EventManager;
+        EnvironmentResetManager m_EnvironmentResetManager;
 
         void Awake()
         {
-            EventManager.AddListener<AllObjectivesCompletedEvent>(OnAllObjectivesCompleted);
-            EventManager.AddListener<PlayerDeathEvent>(OnPlayerDeath);
+            // Locate the local environment's event bus — events from other environments are invisible.
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, GameFlowManager>(m_EventManager, this);
+
+            m_EventManager.AddListener<AllObjectivesCompletedEvent>(OnAllObjectivesCompleted);
+            m_EventManager.AddListener<PlayerDeathEvent>(OnPlayerDeath);
         }
 
         void Start()
         {
             AudioUtility.SetMasterVolume(1);
+
+            // Find the reset manager within this environment only.
+            m_EnvironmentResetManager = transform.root.GetComponentInChildren<EnvironmentResetManager>();
         }
 
         void Update()
@@ -53,7 +62,6 @@ namespace Unity.FPS.Game
 
                 AudioUtility.SetMasterVolume(1 - timeRatio);
 
-                // See if it's time to load the end scene (after the delay)
                 if (Time.time >= m_TimeLoadEndGameScene)
                 {
                     SceneManager.LoadScene(m_SceneToLoad);
@@ -62,42 +70,46 @@ namespace Unity.FPS.Game
             }
         }
 
-        void OnAllObjectivesCompleted(AllObjectivesCompletedEvent evt) => EndGame(true);
-        void OnPlayerDeath(PlayerDeathEvent evt) => EndGame(false);
+        void OnAllObjectivesCompleted(AllObjectivesCompletedEvent evt) 
+        {
+            if (m_EnvironmentResetManager != null)
+                return;
+
+            EndGame(true);
+        }
+
+        void OnPlayerDeath(PlayerDeathEvent evt)
+        {
+            // In RL mode the EnvironmentResetManager handles resets in-place — no scene reload.
+            if (m_EnvironmentResetManager != null)
+                return;
+
+            EndGame(false);
+        }
 
         void EndGame(bool win)
         {
-            // unlocks the cursor before leaving the scene, to be able to click buttons
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            // Remember that we need to load the appropriate end scene after a delay
             GameIsEnding = true;
             EndGameFadeCanvasGroup.gameObject.SetActive(true);
+
             if (win)
             {
                 m_SceneToLoad = WinSceneName;
                 m_TimeLoadEndGameScene = Time.time + EndSceneLoadDelay + DelayBeforeFadeToBlack;
 
-                // play a sound on win
                 var audioSource = gameObject.AddComponent<AudioSource>();
                 audioSource.clip = VictorySound;
                 audioSource.playOnAwake = false;
                 audioSource.outputAudioMixerGroup = AudioUtility.GetAudioGroup(AudioUtility.AudioGroups.HUDVictory);
                 audioSource.PlayScheduled(AudioSettings.dspTime + DelayBeforeWinMessage);
 
-                // create a game message
-                //var message = Instantiate(WinGameMessagePrefab).GetComponent<DisplayMessage>();
-                //if (message)
-                //{
-                //    message.delayBeforeShowing = delayBeforeWinMessage;
-                //    message.GetComponent<Transform>().SetAsLastSibling();
-                //}
-
                 DisplayMessageEvent displayMessage = Events.DisplayMessageEvent;
                 displayMessage.Message = WinGameMessage;
                 displayMessage.DelayBeforeDisplay = DelayBeforeWinMessage;
-                EventManager.Broadcast(displayMessage);
+                m_EventManager.Broadcast(displayMessage);
             }
             else
             {
@@ -108,8 +120,11 @@ namespace Unity.FPS.Game
 
         void OnDestroy()
         {
-            EventManager.RemoveListener<AllObjectivesCompletedEvent>(OnAllObjectivesCompleted);
-            EventManager.RemoveListener<PlayerDeathEvent>(OnPlayerDeath);
+            if (m_EventManager != null)
+            {
+                m_EventManager.RemoveListener<AllObjectivesCompletedEvent>(OnAllObjectivesCompleted);
+                m_EventManager.RemoveListener<PlayerDeathEvent>(OnPlayerDeath);
+            }
         }
     }
 }

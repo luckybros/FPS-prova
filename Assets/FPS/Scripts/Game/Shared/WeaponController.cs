@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using Unity.FPS.Gameplay;
 
 namespace Unity.FPS.Game
 {
@@ -336,7 +337,8 @@ namespace Unity.FPS.Game
 
             if (show && ChangeWeaponSfx)
             {
-                m_ShootAudioSource.PlayOneShot(ChangeWeaponSfx);
+                if (m_ShootAudioSource != null)
+                    m_ShootAudioSource.PlayOneShot(ChangeWeaponSfx);
             }
 
             IsWeaponActive = show;
@@ -400,6 +402,17 @@ namespace Unity.FPS.Game
 
                 return true;
             }
+
+            /*
+            if (FaultManager.Instance != null && FaultManager.Instance.Config.crashShootZeroAmmo)
+            {
+                if (m_CurrentAmmo < 1f && !IsReloading)
+                {
+                    Animator reloadAnimator = null; 
+                    reloadAnimator.SetTrigger("Reload"); 
+                }
+            }
+            */
 
             return false;
         }

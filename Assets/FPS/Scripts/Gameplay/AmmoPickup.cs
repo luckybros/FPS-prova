@@ -1,4 +1,4 @@
-﻿using Unity.FPS.Game;
+using Unity.FPS.Game;
 using UnityEngine;
 
 namespace Unity.FPS.Gameplay
@@ -23,10 +23,10 @@ namespace Unity.FPS.Gameplay
 
                     AmmoPickupEvent evt = Events.AmmoPickupEvent;
                     evt.Weapon = weapon;
-                    EventManager.Broadcast(evt);
+                    m_EventManager.Broadcast(evt);
 
                     PlayPickupFeedback();
-                    Destroy(gameObject);
+                    HandlePickedUp();
                 }
             }
         }

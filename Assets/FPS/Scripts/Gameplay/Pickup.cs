@@ -1,4 +1,4 @@
-﻿using Unity.FPS.Game;
+using Unity.FPS.Game;
 using UnityEngine;
 
 namespace Unity.FPS.Gameplay
@@ -22,6 +22,10 @@ namespace Unity.FPS.Gameplay
         Collider m_Collider;
         Vector3 m_StartPosition;
         bool m_HasPlayedFeedback;
+        EnvironmentResetManager m_ResetManager;
+
+        /// <summary>Local environment event bus. Available to subclasses for broadcasting pickup events.</summary>
+        protected EventManager m_EventManager;
 
         protected virtual void Start()
         {
@@ -30,21 +34,20 @@ namespace Unity.FPS.Gameplay
             m_Collider = GetComponent<Collider>();
             DebugUtility.HandleErrorIfNullGetComponent<Collider, Pickup>(m_Collider, this, gameObject);
 
-            // ensure the physics setup is a kinematic rigidbody trigger
             PickupRigidbody.isKinematic = true;
             m_Collider.isTrigger = true;
 
-            // Remember start position for animation
             m_StartPosition = transform.position;
+            m_ResetManager = transform.root.GetComponentInChildren<EnvironmentResetManager>();
+            m_EventManager = transform.root.GetComponentInChildren<EventManager>();
+            DebugUtility.HandleErrorIfNullFindObject<EventManager, Pickup>(m_EventManager, this);
         }
 
         void Update()
         {
-            // Handle bobbing
             float bobbingAnimationPhase = ((Mathf.Sin(Time.time * VerticalBobFrequency) * 0.5f) + 0.5f) * BobbingAmount;
             transform.position = m_StartPosition + Vector3.up * bobbingAnimationPhase;
 
-            // Handle rotating
             transform.Rotate(Vector3.up, RotatingSpeed * Time.deltaTime, Space.Self);
         }
 
@@ -58,7 +61,7 @@ namespace Unity.FPS.Gameplay
 
                 PickupEvent evt = Events.PickupEvent;
                 evt.Pickup = gameObject;
-                EventManager.Broadcast(evt);
+                m_EventManager.Broadcast(evt);
             }
         }
 
@@ -73,16 +76,30 @@ namespace Unity.FPS.Gameplay
                 return;
 
             if (PickupSfx)
-            {
                 AudioUtility.CreateSFX(PickupSfx, transform.position, AudioUtility.AudioGroups.Pickup, 0f);
-            }
 
             if (PickupVfxPrefab)
-            {
-                var pickupVfxInstance = Instantiate(PickupVfxPrefab, transform.position, Quaternion.identity);
-            }
+                Instantiate(PickupVfxPrefab, transform.position, Quaternion.identity);
 
             m_HasPlayedFeedback = true;
+        }
+
+        /// <summary>Disables the pickup in RL mode instead of destroying it, so it can be respawned next episode.</summary>
+        protected void HandlePickedUp()
+        {
+            if (m_ResetManager != null)
+                gameObject.SetActive(false);
+            else
+                Destroy(gameObject);
+        }
+
+        /// <summary>Restores the pickup to its initial position and state for RL episode reset.</summary>
+        public void ResetPickup(Vector3 initialPosition)
+        {
+            m_HasPlayedFeedback = false;
+            m_StartPosition = initialPosition;
+            transform.position = initialPosition;
+            gameObject.SetActive(true);
         }
     }
 }
